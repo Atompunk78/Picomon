@@ -13,7 +13,7 @@ from atomic import Pressed
 #Copyright (c) 2025 Henry Gurney
 #Licensed under CC BY-NC-ND 4.0
 
-version = "v1.5" #with Atomic Engine version 1.2
+version = "v1.6" #designed to use Atomic Engine version 1.2
 
 spi = SPI(1, baudrate=60000000, polarity=1, phase=1,
           sck=Pin(10), mosi=Pin(11))
@@ -437,14 +437,14 @@ def DrawTeam():
             names.append(" --- ")
             colours.append(BLACK)
 
-    DrawText(font8, "A:",  5, 202, BLACK, WHITE, 0, 0)
     DrawText(font8, f"   {names[0]}",  5, 202, colours[0], WHITE, 0, 0)
-    DrawText(font8, "B:",  5, 236, BLACK, WHITE, 0, 1)
+    DrawText(font8, "A:",  5, 202, BLACK, WHITE, 0, 0)
     DrawText(font8, f"   {names[1]}",  5, 236, colours[1], WHITE, 0, 1)
-    DrawText(font8, "X:", 120, 202, BLACK, WHITE, 0, 0)
+    DrawText(font8, "B:",  5, 236, BLACK, WHITE, 0, 1)
     DrawText(font8, f"   {names[2]}", 120, 202, colours[2], WHITE, 0, 0)
-    DrawText(font8, "Y:", 120, 236, BLACK, WHITE, 0, 1)
+    DrawText(font8, "X:", 120, 202, BLACK, WHITE, 0, 0)
     DrawText(font8, f"   {names[3]}", 120, 236, colours[3], WHITE, 0, 1)
+    DrawText(font8, "Y:", 120, 236, BLACK, WHITE, 0, 1)
 
 def ClearPicoUI(x, y=5):
     DrawText(font8, f" "*15, x, y, BLACK, WHITE)
@@ -660,6 +660,8 @@ def Battle(enemyPicos):
     DrawPicomonInfo(enemyPico, info2X)
     DrawPicomon(playerPico, pico1X, True)
     DrawPicomon(enemyPico, pico2X)
+
+    while Pressed(iCentre): sleep(0.001)
 
     while True:
         moveUsed = False
@@ -911,6 +913,6 @@ while True:
     sleep(max(0, ((1000000/targetFps) - (ticks_us() - frameStart)) / 1000000))
 
 #TODO
-#add a thing so if you fail to flee 3x in a row it just lets you
+#maybe add a thing so if you fail to flee 3x in a row it just lets you
 #add other biomes and minibosses; maybe add le poisson steve as the water boss with only fire and electric moves
 #obviously more picomon is always a good thing too but they take ages, maybe ask anna for help after munich
