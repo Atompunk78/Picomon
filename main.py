@@ -13,7 +13,7 @@ from atomic import Pressed
 #Copyright (c) 2025 Henry Gurney
 #Licensed under CC BY-NC-ND 4.0
 
-version = "v1.4" #with Atomic Engine version 1.2
+version = "v1.5" #with Atomic Engine version 1.2
 
 spi = SPI(1, baudrate=60000000, polarity=1, phase=1,
           sck=Pin(10), mosi=Pin(11))
@@ -27,7 +27,11 @@ display = st7789.ST7789(
 )
 
 Pin(13, Pin.OUT).value(1) #backlight on
-display.init()
+
+try:
+    display.init()
+except Exception as e:
+    print(f"{e}\nSome systems don't require display.init() and crash when they see it, including yours, so I've skipped the line automatically and it should run normally now - if not, you will have to debug the error manually")
 
 iUp     = Pin(2,  Pin.IN, Pin.PULL_UP)
 iDown   = Pin(18, Pin.IN, Pin.PULL_UP)
@@ -355,7 +359,7 @@ def LevelUpChance(playerLevel, enemyLevel):
     diff = enemyLevel - playerLevel
     if diff < -2: 
         return 0.0
-    return min(2 ** diff / 25, 1.0)
+    return min(2 ** diff / 12.5, 1)
 
 def AttemptCapture(attacker, defender):
     baseChance = 100
@@ -370,8 +374,14 @@ def AttemptCapture(attacker, defender):
 def NewPicomon(speciesName, level=None):
     data = speciesRegistry[speciesName]
     moveTuples = [MoveTuple(m) for m in data["moves"]]
+    
     if not level:
         level = int(round(utilities.BellCurve(baseLvl, 2, 5, 15), 0))
+        for _ in range(2):
+            diff = (level + len(playerTeam.teamList)) - baseLvl
+            if diff > 0 and random() < (0.0625 * (diff ** 1.5)):
+                level -= 1
+
     return Picomon(
         speciesName,
         data["desc"],
@@ -796,9 +806,10 @@ def Battle(enemyPicos):
         if playerPico.hp <= 0:
             WriteToInfoUI(f"{playerPico.name} fainted!")
             sleep(2)
-            WriteToInfoUI(f"{playerPico.name} lost a level!")
-            sleep(2)
-            playerPico.LevelUp(-1)
+            if playerPico.level >= enemyPico.level or enemyPico.name == "Poulter":
+                WriteToInfoUI(f"{playerPico.name} lost a level!")
+                sleep(2)
+                playerPico.LevelUp(-1)
 
             aliveFound = False
             for i, pico in enumerate(playerTeam.teamList):
@@ -831,7 +842,7 @@ if debug:
     ShowPowers()
 
 while True: #titlescreen
-    level = 10 if Pressed(iCentre) else 8
+    level = 12 if Pressed(iCentre) else 10
     if Pressed(iA):
         playerTeam.AddPicomon(NewPicomon("Embash", level))
         break
@@ -885,7 +896,7 @@ while True:
                 Battle([NewPicomon("Poulter", 20)])
             else:
                 enemyCount = 1
-                while enemyCount < 4 and randint(0, 1):
+                while enemyCount < 4 and randint(1, 3) == 1:
                     enemyCount += 1
                 weights = tileChances[tileType][1]
                 enemies = [NewPicomon(ChooseSpeciesByType(weights)) for _ in range(enemyCount)]
